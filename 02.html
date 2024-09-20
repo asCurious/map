@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Soil Science Map</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+      #map {
+        width: 800px;
+        height: 600px;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      const map = L.map("map").setView([35.6895, 51.389], 6); // initial map center and zoom
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+        subdomains: ["a", "b", "c"],
+      }).addTo(map);
+      const locations = [
+        { name: "تهران", lat: 35.6892, lng: 51.389 },
+        { name: "اصفهان", lat: 32.6539, lng: 51.666 },
+        { name: "شیراز", lat: 29.5926, lng: 52.5836 },
+      ];
+
+      const locationSelect = document.createElement("select");
+      locationSelect.id = "location-select";
+
+      locations.forEach((location) => {
+        const option = document.createElement("option");
+        option.value = `${location.lat},${location.lng}`;
+        option.text = location.name;
+        locationSelect.appendChild(option);
+      });
+
+      document.body.appendChild(locationSelect);
+
+      locationSelect.addEventListener("change", (e) => {
+        const selectedLocation = e.target.value.split(",");
+        map.setView([selectedLocation[0], selectedLocation[1]], 14);
+      });
+      let drawnItems = L.featureGroup().addTo(map);
+
+      map.on("draw:created", (e) => {
+        const polygon = e.layer;
+        drawnItems.addLayer(polygon);
+        const bounds = polygon.getBounds();
+        const latlngs = bounds.getLatLngs();
+        const area = polygon.getArea();
+        console.log(`Polygon area: ${area} square meters`);
+        // Display information within the polygon
+        // For example, you can make an API call to retrieve soil science data
+        // and display it on the map
+        const popupContent = `Soil science data for this area: <br>TODO: API call to retrieve data`;
+        polygon.bindPopup(popupContent);
+      });
+      const drawControl = new L.Control.Draw({
+        draw: {
+          polygon: {
+            allowIntersection: false,
+            showArea: true,
+          },
+        },
+        edit: {
+          featureGroup: drawnItems,
+        },
+      }).addTo(map);
+    </script>
+  </body>
+</html>
